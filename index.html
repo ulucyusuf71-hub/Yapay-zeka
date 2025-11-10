@@ -3,62 +3,124 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ciddi Yapay Zeka Asistanı</title>
+<title>Pomodoro Zamanlayıcı</title>
 <style>
-  body { margin:0; font-family:Arial,sans-serif; background:#1f2937; color:#f9fafb; display:flex; flex-direction:column; height:100vh; }
-  header { padding:16px; background:#111827; text-align:center; font-size:1.2rem; font-weight:bold; border-bottom:1px solid #374151; }
-  #chatContainer { flex:1; padding:16px; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
-  .message { padding:12px 16px; border-radius:12px; max-width:80%; word-wrap:break-word; }
-  .user { background:#2563eb; color:#fff; align-self:flex-end; }
-  .ai { background:#374151; color:#f9fafb; align-self:flex-start; }
-  footer { padding:12px; display:flex; gap:8px; border-top:1px solid #374151; background:#111827; }
-  input[type="text"] { flex:1; padding:10px 12px; border-radius:8px; border:none; outline:none; font-size:1rem; }
-  button { padding:10px 16px; border:none; border-radius:8px; background:#10b981; color:#fff; font-weight:bold; cursor:pointer; }
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #ffcccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    flex-direction: column;
+  }
+  h1 {
+    color: #b30000;
+  }
+  input[type="number"] {
+    padding: 10px;
+    font-size: 16px;
+    width: 80px;
+    margin-bottom: 10px;
+    border: 2px solid #b30000;
+    border-radius: 5px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #b30000;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px;
+  }
+  button:hover {
+    background-color: #800000;
+  }
+  #timer {
+    margin-top: 20px;
+    font-size: 48px;
+    color: #b30000;
+  }
+  #status {
+    margin-top: 10px;
+    font-size: 24px;
+    color: #b30000;
+  }
 </style>
 </head>
 <body>
-
-<header>Ciddi Yapay Zeka Asistanı</header>
-
-<div id="chatContainer">
-  <div class="ai message">Merhaba. Ben senin ciddi AI asistanınım. Her konuda yardımcı olabilirim.</div>
+<h1>Pomodoro Zamanlayıcı</h1>
+<input type="number" id="workMinutes" placeholder="Dakika" min="1">
+<div>
+  <button onclick="startPomodoro()">Başlat</button>
+  <button onclick="pausePomodoro()">Durdur</button>
+  <button onclick="resetPomodoro()">Sıfırla</button>
 </div>
 
-<footer>
-  <input type="text" id="userInput" placeholder="Mesajınızı yazın..." />
-  <button id="sendBtn">Gönder</button>
-</footer>
+<div id="timer">00:00</div>
+<div id="status"></div>
 
 <script>
-const chatContainer = document.getElementById('chatContainer');
-const userInput = document.getElementById('userInput');
-const sendBtn = document.getElementById('sendBtn');
+let timerInterval;
+let remainingTime = 0;
+let isPaused = false;
+let currentStatus = "";
 
-function appendMessage(text, sender){
-  const div = document.createElement('div');
-  div.textContent = text;
-  div.classList.add('message', sender);
-  chatContainer.appendChild(div);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
+function startPomodoro() {
+    clearInterval(timerInterval);
+    const workMinutes = parseInt(document.getElementById('workMinutes').value);
+    if(isNaN(workMinutes) || workMinutes <= 0){
+        alert("Lütfen geçerli bir süre girin!");
+        return;
+    }
+    remainingTime = workMinutes * 60;
+    currentStatus = "Çalışma Süresi";
+    runTimer();
 }
 
-// Demo AI cevabı (sabit, ciddi üslup)
-function aiResponse(msg){
-  return "Ciddi AI cevap: Bu demo sürümü her soruya ciddi üslupla yanıt verir. Gerçek AI bağlandığında canlı cevap alırsın.";
+function runTimer() {
+    const timerElement = document.getElementById('timer');
+    const statusElement = document.getElementById('status');
+    statusElement.textContent = currentStatus;
+
+    timerInterval = setInterval(() => {
+        if(!isPaused){
+            let mins = Math.floor(remainingTime / 60);
+            let secs = remainingTime % 60;
+            timerElement.textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+            remainingTime--;
+
+            if(remainingTime < 0){
+                clearInterval(timerInterval);
+                if(currentStatus === "Çalışma Süresi"){
+                    alert("Çalışma bitti! 5 dakika mola zamanı.");
+                    remainingTime = 5 * 60;
+                    currentStatus = "Mola Süresi";
+                    runTimer();
+                } else {
+                    alert("Mola bitti! Tekrar çalışabilirsiniz.");
+                    timerElement.textContent = "00:00";
+                    statusElement.textContent = "";
+                }
+            }
+        }
+    }, 1000);
 }
 
-sendBtn.addEventListener('click', ()=>{
-  const msg = userInput.value.trim();
-  if(!msg) return;
-  appendMessage(msg,'user');
-  userInput.value='';
-  setTimeout(()=>{ appendMessage(aiResponse(msg),'ai'); },300);
-});
+function pausePomodoro() {
+    isPaused = !isPaused;
+}
 
-userInput.addEventListener('keydown', e=>{
-  if(e.key==='Enter') sendBtn.click();
-});
+function resetPomodoro() {
+    clearInterval(timerInterval);
+    remainingTime = 0;
+    isPaused = false;
+    document.getElementById('timer').textContent = "00:00";
+    document.getElementById('status').textContent = "";
+}
 </script>
-
 </body>
-  </html>
+</html>
